@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transcription tester</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Transcription tester</h1>
+      <p id="state" class="state">Idle</p>
+      <div class="controls">
+        <button id="start" type="button">Start recording</button>
+        <button id="stop" type="button" disabled>Stop recording</button>
+      </div>
+      <p id="message" class="message" hidden></p>
+
+      <section id="transcript-box" hidden>
+        <h2>Transcription</h2>
+        <pre id="transcript"></pre>
+      </section>
+
+      <section id="request-box" class="debug" hidden>
+        <h2>Request</h2>
+        <pre id="request-debug"></pre>
+      </section>
+
+      <section id="response-box" class="debug" hidden>
+        <h2>Response</h2>
+        <pre id="response-debug"></pre>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
