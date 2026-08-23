@@ -105,3 +105,25 @@ async def index() -> FileResponse:
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+def main() -> None:
+    import argparse
+
+    import uvicorn
+
+    parser = argparse.ArgumentParser(
+        prog="dialogue-audio-transcriber",
+        description="Run the dialogue audio transcriber API.",
+    )
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--reload", action="store_true")
+    args = parser.parse_args()
+
+    uvicorn.run(
+        "dialogue_audio_transcriber.main:app",
+        host=args.host,
+        port=args.port,
+        reload=args.reload,
+    )

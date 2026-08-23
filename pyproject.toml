@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.scripts]
-dialogue-audio-transcriber = "dialogue_audio_transcriber:main"
+dialogue-audio-transcriber = "dialogue_audio_transcriber.main:main"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
