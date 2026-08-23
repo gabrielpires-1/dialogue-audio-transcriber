@@ -1,0 +1,1 @@
+Estou testando a transcrição desta aplicação. Preciso que o modelo distinga transcrição de transição, dicção de adição, seção de sessão e conserto de concerto. Falo em português do Brasil, de forma concisa, usando o Whisper large-v3 a 16 quilohertz, com beam size 8, no arquivo recording.webm.

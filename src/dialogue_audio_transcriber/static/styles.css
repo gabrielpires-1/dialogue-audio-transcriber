@@ -1,0 +1,93 @@
+:root {
+  color: #1a1a1a;
+  background: #f4f4f4;
+  font-family: system-ui, sans-serif;
+  line-height: 1.4;
+}
+
+body {
+  margin: 0;
+  padding: 2rem 1.25rem;
+}
+
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+h1 {
+  margin: 0 0 0.75rem;
+  font-size: 1.5rem;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+button {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.state {
+  margin: 0;
+  font-weight: 600;
+}
+
+.state.recording {
+  color: #b00020;
+}
+
+.message {
+  margin: 0.75rem 0 0;
+  color: #b00020;
+}
+
+.debug {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  background: #fff;
+}
+
+.debug h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.debug pre {
+  margin: 0;
+  padding: 0.75rem;
+  overflow: auto;
+  background: #f0f0f0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#transcript-box {
+  margin-top: 1.5rem;
+}
+
+#transcript-box h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+#transcript {
+  margin: 0;
+  padding: 0.75rem;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #ccc;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

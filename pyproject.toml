@@ -1,0 +1,27 @@
+[project]
+name = "dialogue-audio-transcriber"
+version = "0.1.0"
+description = "The backend fastAPI project to transcript dialogues in batch or in stream"
+readme = "README.md"
+authors = [
+    { name = "Gabriel Pires", email = "gabrielpires2991@gmail.com" }
+]
+requires-python = ">=3.12.14,<3.13"
+dependencies = [
+    "fastapi>=0.141.1",
+    "faster-whisper>=1.2.0",
+    "nvidia-cublas-cu12>=12.9.2.10",
+    "nvidia-cudnn-cu12==9.*",
+    "onnxruntime>=1.23.2",
+    "pydantic-settings>=2.11.0",
+    "python-multipart>=0.0.20",
+    "ruff>=0.16.4",
+    "uvicorn>=0.35.0",
+]
+
+[project.scripts]
+dialogue-audio-transcriber = "dialogue_audio_transcriber:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
