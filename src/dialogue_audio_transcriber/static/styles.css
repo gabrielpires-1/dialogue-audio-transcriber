@@ -27,6 +27,39 @@ h1 {
   margin: 1rem 0;
 }
 
+.diarization,
+.upload {
+  margin: 1rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  background: #fff;
+}
+
+.diarization legend,
+.upload legend {
+  padding: 0 0.35rem;
+  font-weight: 600;
+}
+
+.diarization label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-right: 1rem;
+}
+
+.upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#audio-file {
+  font: inherit;
+  max-width: 100%;
+}
+
 button {
   font: inherit;
   padding: 0.5rem 1rem;
@@ -71,6 +104,21 @@ button:disabled {
   background: #f0f0f0;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+#recording-box {
+  margin-top: 1.5rem;
+}
+
+#recording-box h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+#recording-box audio {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.75rem;
 }
 
 #transcript-box {

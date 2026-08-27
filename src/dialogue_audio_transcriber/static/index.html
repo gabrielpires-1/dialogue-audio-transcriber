@@ -10,11 +10,39 @@
     <main>
       <h1>Transcription tester</h1>
       <p id="state" class="state">Idle</p>
+      <fieldset class="diarization">
+        <legend>Diarization</legend>
+        <label>
+          <input type="radio" name="diarization" value="local" checked />
+          Local
+        </label>
+        <label>
+          <input type="radio" name="diarization" value="api" />
+          pyannote API
+        </label>
+      </fieldset>
       <div class="controls">
         <button id="start" type="button">Start recording</button>
         <button id="stop" type="button" disabled>Stop recording</button>
       </div>
+      <fieldset class="upload">
+        <legend>Or upload a file</legend>
+        <div class="upload-row">
+          <input
+            id="audio-file"
+            type="file"
+            accept=".wav,.mp3,.m4a,.ogg,.flac,.webm,audio/wav,audio/mpeg,audio/mp4,audio/ogg,audio/flac,audio/webm"
+          />
+          <button id="submit-file" type="button" disabled>Transcribe file</button>
+        </div>
+      </fieldset>
       <p id="message" class="message" hidden></p>
+
+      <section id="recording-box" hidden>
+        <h2>Audio</h2>
+        <audio id="recording-player" controls></audio>
+        <a id="recording-download">Download audio</a>
+      </section>
 
       <section id="transcript-box" hidden>
         <h2>Transcription</h2>

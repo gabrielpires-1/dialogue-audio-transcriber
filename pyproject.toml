@@ -13,6 +13,7 @@ dependencies = [
     "nvidia-cublas-cu12>=12.9.2.10",
     "nvidia-cudnn-cu12==9.*",
     "onnxruntime>=1.23.2",
+    "pyannote-audio>=4.0.7",
     "pydantic-settings>=2.11.0",
     "python-multipart>=0.0.20",
     "ruff>=0.16.4",
