@@ -15,6 +15,18 @@ class InvalidAudioFileError(AppError):
     status_code = 400
 
 
+class InvalidDiarizationModeError(AppError):
+    """Raised when diarization is not local or api."""
+
+    status_code = 400
+
+
+class MissingPyannoteApiKeyError(AppError):
+    """Raised when API diarization is requested without a configured key."""
+
+    status_code = 400
+
+
 class TranscriptionError(AppError):
     """Raised for internal failures during job setup."""
 

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+import threading
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -12,30 +13,46 @@ from dialogue_audio_transcriber.config import Settings
 from dialogue_audio_transcriber.constants import (
     ALLOWED_CONTENT_TYPES,
     ALLOWED_EXTENSIONS,
+    DIARIZATION_API,
+    DIARIZATION_LOCAL,
     MAX_UPLOAD_SIZE_BYTES,
     READ_CHUNK_SIZE,
     TIMESTAMP_FORMAT,
     TRANSCRIPT_NOT_FOUND_MESSAGE,
     TRANSCRIPTION_FAILURE_MESSAGE,
 )
+from dialogue_audio_transcriber.diarization import resolve_diarization_mode
 from dialogue_audio_transcriber.exceptions import (
     InvalidAudioFileError,
     TranscriptionError,
     TranscriptNotFoundError,
 )
+from dialogue_audio_transcriber.speaker_turns import TimedWord, format_transcript
 
 if TYPE_CHECKING:
     from faster_whisper import WhisperModel
+
+    from dialogue_audio_transcriber.diarization import Diarizer
 
 logger = logging.getLogger(__name__)
 
 
 class TranscriptionService:
-    def __init__(self, model: WhisperModel, settings: Settings) -> None:
+    def __init__(
+        self, model: WhisperModel, diarizer: Diarizer, settings: Settings
+    ) -> None:
         self._model = model
+        self._diarizer = diarizer
+        self._api_diarizer: Diarizer | None = None
+        self._api_lock = threading.Lock()
+        self._pyannote_api_key = settings.pyannote_api_key
         self._language = settings.language
+        self._beam_size = settings.beam_size
         self._output_dir = settings.output_dir
         self._output_dir.mkdir(parents=True, exist_ok=True)
+
+    def resolve_diarization_mode(self, diarization: str) -> str:
+        return resolve_diarization_mode(diarization, self._pyannote_api_key)
 
     def validate_upload(self, upload: UploadFile) -> None:
         filename = (upload.filename or "").strip()
@@ -61,7 +78,7 @@ class TranscriptionService:
         extension = Path(filename).suffix.lower().lstrip(".")
         content = await self._read_upload(upload)
 
-        timestamp = datetime.now(timezone.utc).strftime(TIMESTAMP_FORMAT)
+        timestamp = datetime.now(UTC).strftime(TIMESTAMP_FORMAT)
         audio_path = self._output_dir / f"{timestamp}.{extension}"
         result_filename = f"{timestamp}.txt"
 
@@ -79,10 +96,17 @@ class TranscriptionService:
         except OSError as exc:
             raise TranscriptionError("Failed to read transcript") from exc
 
-    async def transcribe_and_write(self, audio_path: Path, result_filename: str) -> None:
+    async def transcribe_and_write(
+        self,
+        audio_path: Path,
+        result_filename: str,
+        diarization: str = DIARIZATION_LOCAL,
+    ) -> None:
         try:
             try:
-                text = await asyncio.to_thread(self._transcribe, audio_path)
+                text = await asyncio.to_thread(
+                    self._transcribe, audio_path, diarization
+                )
             except Exception:
                 logger.exception("Transcription failed for %s", result_filename)
                 text = TRANSCRIPTION_FAILURE_MESSAGE
@@ -118,9 +142,49 @@ class TranscriptionService:
 
         return b"".join(chunks)
 
-    def _transcribe(self, audio_path: Path) -> str:
-        segments, _info = self._model.transcribe(str(audio_path), language=self._language)
-        return "".join(segment.text for segment in segments).strip()
+    def _transcribe(self, audio_path: Path, diarization: str) -> str:
+        from dialogue_audio_transcriber.diarization import release_gpu_cache
+
+        spans = self._transcribe_segments(audio_path)
+        release_gpu_cache()
+        turns = self._diarizer_for(diarization).diarize(audio_path)
+        return format_transcript(spans, turns)
+
+    def _diarizer_for(self, diarization: str) -> Diarizer:
+        if diarization != DIARIZATION_API:
+            return self._diarizer
+        if self._api_diarizer is None:
+            with self._api_lock:
+                if self._api_diarizer is None:
+                    from dialogue_audio_transcriber.diarization import load_api_diarizer
+
+                    self._api_diarizer = load_api_diarizer(self._pyannote_api_key)
+        api_diarizer = self._api_diarizer
+        if api_diarizer is None:
+            raise TranscriptionError("Failed to load API diarizer")
+        return api_diarizer
+
+    def _transcribe_segments(self, audio_path: Path) -> list[TimedWord]:
+        segments, _info = self._model.transcribe(
+            str(audio_path),
+            language=self._language,
+            beam_size=self._beam_size,
+            condition_on_previous_text=False,
+            vad_filter=True,
+        )
+        spans: list[TimedWord] = []
+        for segment in segments:
+            text = segment.text or ""
+            if not text.strip():
+                continue
+            spans.append(
+                TimedWord(
+                    start=float(segment.start),
+                    end=float(segment.end),
+                    text=text,
+                )
+            )
+        return spans
 
     def _write_transcript(self, result_filename: str, text: str) -> None:
         path = self._output_dir / result_filename

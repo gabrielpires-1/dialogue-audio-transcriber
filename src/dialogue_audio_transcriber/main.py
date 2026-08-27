@@ -3,12 +3,21 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import BackgroundTasks, Depends, FastAPI, Request, UploadFile, status
+from fastapi import (
+    BackgroundTasks,
+    Depends,
+    FastAPI,
+    Query,
+    Request,
+    UploadFile,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from dialogue_audio_transcriber.config import get_settings
+from dialogue_audio_transcriber.constants import DIARIZATION_LOCAL
 from dialogue_audio_transcriber.cuda import preload_cuda_libraries
 from dialogue_audio_transcriber.exceptions import AppError
 from dialogue_audio_transcriber.schemas import (
@@ -25,6 +34,8 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     from faster_whisper import WhisperModel
 
+    from dialogue_audio_transcriber.diarization import load_diarizer
+
     preload_cuda_libraries()
     settings = get_settings()
     model = WhisperModel(
@@ -32,7 +43,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         device=settings.device,
         compute_type=settings.compute_type,
     )
-    app.state.transcription_service = TranscriptionService(model=model, settings=settings)
+    diarizer = load_diarizer(settings.hf_token, settings.diarization_device)
+    app.state.transcription_service = TranscriptionService(
+        model=model, diarizer=diarizer, settings=settings
+    )
     yield
 
 
@@ -72,9 +86,11 @@ async def transcribe(
     file: UploadFile,
     background_tasks: BackgroundTasks,
     service: Annotated[TranscriptionService, Depends(get_service)],
+    diarization: Annotated[str, Query()] = DIARIZATION_LOCAL,
 ) -> TranscriptionAccepted:
+    mode = service.resolve_diarization_mode(diarization)
     filename, audio_path = await service.create_job(file)
-    background_tasks.add_task(service.transcribe_and_write, audio_path, filename)
+    background_tasks.add_task(service.transcribe_and_write, audio_path, filename, mode)
     return TranscriptionAccepted(filename=filename)
 
 
